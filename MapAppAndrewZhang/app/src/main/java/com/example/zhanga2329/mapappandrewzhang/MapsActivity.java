@@ -3,13 +3,16 @@ package com.example.zhanga2329.mapappandrewzhang;
 import android.*;
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+import android.location.LocationListener;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -25,7 +28,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean isGPSenabled = false;
     private boolean isNetworkEnabled = false;
     private boolean canGetLocation = false;
-    private static final long MIN_TIME_BW_UPDATES = 1000*15;
+    private static final long MIN_TIME_BW_UPDATES = 1000 * 15;
     private static final float MIN_DISTANCE_CHANGE_FOR_UPDATES = 5.0f;
 
     @Override
@@ -64,43 +67,83 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
-            Log.d("MapAppAndrewZhang","Failed coarse permission check");
+            Log.d("MapAppAndrewZhang", "Failed coarse permission check");
             Log.d("MappAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)));
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
         }
-        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.d("MapAppAndrewZhang", "Failed fine permission check");
             Log.d("MappAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)));
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 2);
         }
-        mMap.setMyLocationEnabled(true);
+        //mMap.setMyLocationEnabled(true);
     }
+
     public void toggleMapType(View v) {
-        if(mMap.getMapType() == GoogleMap.MAP_TYPE_NORMAL) mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        if (mMap.getMapType() == GoogleMap.MAP_TYPE_NORMAL)
+            mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
         else mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
     }
-    public void getLocation() {
-        try{
+
+    public void dropMarker(String provider) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            Log.d("MapAppAndrewZhang", "Failed coarse permission check");
+            Log.d("MappAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)));
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
+        }
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.d("MapAppAndrewZhang", "Failed fine permission check");
+            Log.d("MappAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)));
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 2);
+        }
+        //mMap.addMarker(new MarkerOptions().position(locationManager.getLastKnownLocation(provider)).title("Born Here"));
+    }
+
+    public void getLocation(View v) {
+        try {
             locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
             isGPSenabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            if(isGPSenabled) Log.d("MapAppAndrewZhang", "getLocation: GPS is enabled");
+            if (isGPSenabled) Log.d("MapAppAndrewZhang", "getLocation: GPS is enabled");
 
             isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-            if(isNetworkEnabled) Log.d("MapAppAndrewZhang", "getLocation: Network is enabled");
+            if (isNetworkEnabled) Log.d("MapAppAndrewZhang", "getLocation: Network is enabled");
 
-            if(!isGPSenabled && !isNetworkEnabled) {
+            if (!isGPSenabled && !isNetworkEnabled) {
                 Log.d("MapAppAndrewZhang", "getLocation: No Provider is Enabled");
-            }
-            else {
+            } else {
                 canGetLocation = true;
-                if(isGPSenabled) {
-                    Log.d("MapAppAndrewZhang","getLocation: GPS ENABLED; REQUESTION LOCATION UPDATES");
+                if (isGPSenabled) {
+                    Log.d("MapAppAndrewZhang", "getLocation: GPS ENABLED; REQUESTION LOCATION UPDATES");
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        Log.d("MapAppAndrewZhang", "Failed coarse permission check");
+                        Log.d("MappAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)));
+                        ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
+                    }
+                    if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        Log.d("MapAppAndrewZhang", "Failed fine permission check");
+                        Log.d("MappAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)));
+                        ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 2);
+                    }
                     locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                             MIN_TIME_BW_UPDATES,
                             MIN_DISTANCE_CHANGE_FOR_UPDATES,
                             locationListenerGPS);
                     Log.d("MapAppAndrewZhang","getLocation: Network GPS update request suCCESsFULL");
-                    Toast.makeText(this, "Using GPS", Toast.LENGTH_SHORT);
+                    Toast.makeText(this, "Using GPS", Toast.LENGTH_SHORT).show();
                 }
                 if(isNetworkEnabled) {
                     Log.d("MapAppAndrewZhang","getLocation: NETWORK ENABLED; REQUESTION LOCATION UPDATES");
@@ -109,7 +152,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             MIN_DISTANCE_CHANGE_FOR_UPDATES,
                             locationListenerNetwork);
                     Log.d("MapAppAndrewZhang","getLocation: Network GPS update request suCCESsFULL");
-                    Toast.makeText(this, "Using GPS", Toast.LENGTH_SHORT);
+                    Toast.makeText(this, "Using NETWORK", Toast.LENGTH_SHORT).show();
                 }
             }
         }
@@ -118,4 +161,79 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             e.printStackTrace();
         }
     }
+
+    LocationListener locationListenerGPS = new LocationListener() {
+
+        @Override
+        public void onLocationChanged(Location location) {
+            //output Log.d and toast messages
+            Log.d("MapAppAndrewZhang","Location changed on GPS, dropping marker & disabling network updates");
+            //drop a marker with dropMarker method
+
+            //disable network updates (see LocationManager to disable updates)
+            isNetworkEnabled = false;
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+            //setup a switch statement on status
+            //case: LocationProvider.AVAILABLE into output Log.d + Toast messages
+            //case: LocationProvider.OUT_OF_SERVICE into request updates from NETWORK_PROVIDER
+            //case: LocationProvider.TEMPORARILY_UNAVAILABLE into request updates from NETWORK_PROVIDER
+            //case: default into request updates from N E T W O R K _ P R O V I D E R
+            switch(status) {
+                case LocationProvider.AVAILABLE:
+                    Log.d("MapAppAndrewZhang","GPS provider is available");
+                    break;
+                case LocationProvider.OUT_OF_SERVICE:
+                    isNetworkEnabled = true;
+                    break;
+                case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                    isNetworkEnabled = true;
+                    break;
+                default:
+                    isNetworkEnabled = true;
+                    break;
+            }
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    };
+
+    LocationListener locationListenerNetwork = new LocationListener() {
+
+        @Override
+        public void onLocationChanged(Location location) {
+            //output Log.d and toast messages
+            Log.d("MapAppAndrewZhang","Location changed on NETWORK, dropping marker & enabling network updates");
+            //drop a marker with dropMarker method
+
+            //relaunch request for network location updates
+            isNetworkEnabled = true;
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+            //output Log.d and toast messages
+            Log.d("MapAppAndrewZhang","Status changed in network");
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    };
 }
