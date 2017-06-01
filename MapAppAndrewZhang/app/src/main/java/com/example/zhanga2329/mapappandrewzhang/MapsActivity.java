@@ -3,6 +3,7 @@ package com.example.zhanga2329.mapappandrewzhang;
 import android.*;
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
 import android.location.LocationProvider;
@@ -14,10 +15,14 @@ import android.view.View;
 import android.widget.Toast;
 import android.location.LocationListener;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -30,6 +35,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean canGetLocation = false;
     private static final long MIN_TIME_BW_UPDATES = 1000 * 15;
     private static final float MIN_DISTANCE_CHANGE_FOR_UPDATES = 5.0f;
+    private Location current;
+    private static final float MY_LOC_ZOOM_FACTOR = 17.5f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,12 +75,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
             Log.d("MapAppAndrewZhang", "Failed coarse permission check");
-            Log.d("MappAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)));
+            Log.d("MapAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)));
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
         }
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.d("MapAppAndrewZhang", "Failed fine permission check");
-            Log.d("MappAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)));
+            Log.d("MapAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)));
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 2);
         }
         //mMap.setMyLocationEnabled(true);
@@ -86,6 +93,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void dropMarker(String provider) {
+        LatLng userLocation = null;
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -95,15 +103,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
             Log.d("MapAppAndrewZhang", "Failed coarse permission check");
-            Log.d("MappAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)));
+            Log.d("MapAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)));
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
         }
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.d("MapAppAndrewZhang", "Failed fine permission check");
-            Log.d("MappAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)));
+            Log.d("MapAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)));
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 2);
         }
-        //mMap.addMarker(new MarkerOptions().position(locationManager.getLastKnownLocation(provider)).title("Born Here"));
+        current = null;
+        if(locationManager != null) {
+            current = locationManager.getLastKnownLocation(provider);
+        }
+        if(current != null) {
+            userLocation = new LatLng(current.getLatitude(),current.getLongitude());
+            CameraUpdate update = CameraUpdateFactory.newLatLngZoom(userLocation, MY_LOC_ZOOM_FACTOR);
+            if(provider.equals(LocationManager.GPS_PROVIDER)) {
+                mMap.addCircle(new CircleOptions().center(userLocation).radius(2).strokeColor(Color.BLUE).strokeWidth(2).fillColor(Color.BLUE));
+                // mMap.addMarker(new MarkerOptions().position(userLocation).title("Last Marked Location").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+            }
+            else {
+                mMap.addCircle(new CircleOptions().center(userLocation).radius(2).strokeColor(Color.GREEN).strokeWidth(2).fillColor(Color.GREEN));
+                //mMap.addMarker(new MarkerOptions().position(userLocation).title("Last Marked Location").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+            }
+            mMap.animateCamera(update);
+            //mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
+        }
+        else {
+            Log.d("MapAppAndrewZhang", "NOW YOU FUCKED UP. NOW YOU FUCKED UP. NOW YOU FUCKED UP. YOU HAVE FUCKED UP NOW.");
+            Toast.makeText(this, "Not good.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void getLocation(View v) {
@@ -169,7 +198,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //output Log.d and toast messages
             Log.d("MapAppAndrewZhang","Location changed on GPS, dropping marker & disabling network updates");
             //drop a marker with dropMarker method
-
+            dropMarker(LocationManager.GPS_PROVIDER);
             //disable network updates (see LocationManager to disable updates)
             isNetworkEnabled = false;
         }
@@ -215,7 +244,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //output Log.d and toast messages
             Log.d("MapAppAndrewZhang","Location changed on NETWORK, dropping marker & enabling network updates");
             //drop a marker with dropMarker method
-
+            dropMarker(LocationManager.NETWORK_PROVIDER);
             //relaunch request for network location updates
             isNetworkEnabled = true;
         }
