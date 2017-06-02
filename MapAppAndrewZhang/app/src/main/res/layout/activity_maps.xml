@@ -4,16 +4,26 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     xmlns:xlmns="http://schemas.android.com/tools">
+
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:weightSum="1">
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Current Location"
+            android:text="CLEAR"
+            android:id="@+id/button3"
+            android:onClick="clearMarkers"
+            android:layout_weight="1" />
+
+        <Button
+            android:layout_width="174dp"
+            android:layout_height="wrap_content"
+            android:text="CHANGE VIEW"
             android:id="@+id/button2"
-            android:onClick="getLocation" />
+            android:onClick="toggleMapType" />
     </LinearLayout>
 
 <fragment xmlns:android="http://schemas.android.com/apk/res/android"
@@ -21,15 +31,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/map"
     android:name="com.google.android.gms.maps.SupportMapFragment"
-    android:layout_width="wrap_content"
-    android:layout_height="485dp"
+    android:layout_width="383dp"
+    android:layout_height="430dp"
     tools:context="com.example.zhanga2329.mapappandrewzhang.MapsActivity" />
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
-        android:text="Change View"
+        android:text="CURRENT LOCATION"
         android:id="@+id/button"
-        android:onClick="toggleMapType" />
+        android:onClick="getLocation" />
 
 </LinearLayout>
