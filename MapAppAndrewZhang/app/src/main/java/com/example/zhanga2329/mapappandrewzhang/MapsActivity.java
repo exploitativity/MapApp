@@ -160,25 +160,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (!isGPSenabled && !isNetworkEnabled) {
                     Log.d("MapAppAndrewZhang", "getLocation: No Provider is Enabled");
                 } else {
+                    checkPermission();
                     if (isGPSenabled) {
                         Log.d("MapAppAndrewZhang", "getLocation: GPS ENABLED; REQUESTION LOCATION UPDATES");
-                        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                            // TODO: Consider calling
-                            //    ActivityCompat#requestPermissions
-                            // here to request the missing permissions, and then overriding
-                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                            //                                          int[] grantResults)
-                            // to handle the case where the user grants the permission. See the documentation
-                            // for ActivityCompat#requestPermissions for more details.
-                            Log.d("MapAppAndrewZhang", "Failed coarse permission check");
-                            Log.d("MappAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)));
-                            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
-                        }
-                        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                            Log.d("MapAppAndrewZhang", "Failed fine permission check");
-                            Log.d("MappAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)));
-                            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 2);
-                        }
+
                         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                                 MIN_TIME_BW_UPDATES,
                                 MIN_DISTANCE_CHANGE_FOR_UPDATES,
@@ -204,7 +189,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             e.printStackTrace();
         }
     }
-
+    public void checkPermission() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            Log.d("MapAppAndrewZhang", "Failed coarse permission check");
+            Log.d("MappAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)));
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
+        }
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.d("MapAppAndrewZhang", "Failed fine permission check");
+            Log.d("MappAppAndrewZhang", Integer.toString(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)));
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 2);
+        }
+    }
     LocationListener locationListenerGPS = new LocationListener() {
 
         @Override
@@ -215,7 +218,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 //drop a marker with dropMarker method
                 dropMarker(LocationManager.GPS_PROVIDER);
                 //disable network updates (see LocationManager to disable updates)
-                isNetworkEnabled = false;
+                checkPermission();
+                locationManager.removeUpdates(locationListenerNetwork);
             }
 
         }
@@ -232,13 +236,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Log.d("MapAppAndrewZhang","GPS provider is available");
                     break;
                 case LocationProvider.OUT_OF_SERVICE:
-                    isNetworkEnabled = true;
+                    checkPermission();
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                            MIN_TIME_BW_UPDATES,
+                            MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                            locationListenerNetwork);
                     break;
                 case LocationProvider.TEMPORARILY_UNAVAILABLE:
-                    isNetworkEnabled = true;
+                    checkPermission();
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                            MIN_TIME_BW_UPDATES,
+                            MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                            locationListenerNetwork);
                     break;
                 default:
-                    isNetworkEnabled = true;
+                    checkPermission();
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                            MIN_TIME_BW_UPDATES,
+                            MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                            locationListenerNetwork);
                     break;
             }
         }
@@ -264,7 +280,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 //drop a marker with dropMarker method
                 dropMarker(LocationManager.NETWORK_PROVIDER);
                 //relaunch request for network location updates
-                isNetworkEnabled = true;
+                checkPermission();
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                        MIN_TIME_BW_UPDATES,
+                        MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                        locationListenerNetwork);
             }
         }
 
