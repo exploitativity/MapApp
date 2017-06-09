@@ -4,6 +4,8 @@ import android.*;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.location.LocationProvider;
@@ -12,6 +14,7 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 import android.location.LocationListener;
 
@@ -26,6 +29,8 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.List;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
@@ -37,6 +42,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final float MIN_DISTANCE_CHANGE_FOR_UPDATES = 5.0f;
     private Location current;
     private static final float MY_LOC_ZOOM_FACTOR = 17.5f;
+    private String LatestProvider = null;
+    EditText search;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,6 +146,40 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    public void searchPOIS(View v) {
+        search = (EditText) findViewById(R.id.editText_search);
+        String location = search.getText().toString();
+        Geocoder geocoder = new Geocoder(this);
+        List<Address> addressList = null;
+        try {
+            if(location != null || !location.equals("")) {
+                addressList = geocoder.getFromLocationName(location, Integer.MAX_VALUE);
+                Log.d("MapAppAndrewZhang", "Got address list, length: " + addressList.size() + " " + geocoder.getFromLocationName(location, Integer.MAX_VALUE).size());
+                CameraUpdate update;
+                Address address;
+                if(addressList != null) {
+                    for(int i = 0; i < addressList.size(); i++) {
+                        address = addressList.get(i);
+                        LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+                        checkPermission();
+                        if(Math.sqrt((latLng.latitude - locationManager.getLastKnownLocation(LatestProvider).getLatitude()) * (latLng.latitude - locationManager.getLastKnownLocation(LatestProvider).getLatitude())
+                               + (latLng.longitude - locationManager.getLastKnownLocation(LatestProvider).getLongitude()) * (latLng.longitude - locationManager.getLastKnownLocation(LatestProvider).getLongitude()))
+                                < 0.07) {
+                                //(Math.abs(latLng.latitude - locationManager.getLastKnownLocation(LatestProvider).getLatitude()) < 0.07
+                                //&& Math.abs(latLng.longitude - locationManager.getLastKnownLocation(LatestProvider).getLongitude()) < 0.07) {
+                            mMap.addMarker(new MarkerOptions().position(latLng).title("Search Results"));
+                            update = CameraUpdateFactory.newLatLngZoom(latLng, MY_LOC_ZOOM_FACTOR);
+                            mMap.animateCamera(update);
+                        }
+                    }
+                }
+            }
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void getLocation(View v) {
         try {
             if(trackingEnabled) {
@@ -208,6 +249,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 2);
         }
     }
+
     LocationListener locationListenerGPS = new LocationListener() {
 
         @Override
@@ -216,6 +258,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if(trackingEnabled) {
                 Log.d("MapAppAndrewZhang","Location changed on GPS, dropping marker & disabling network updates");
                 //drop a marker with dropMarker method
+                LatestProvider = LocationManager.GPS_PROVIDER;
                 dropMarker(LocationManager.GPS_PROVIDER);
                 //disable network updates (see LocationManager to disable updates)
                 checkPermission();
@@ -278,6 +321,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 //output Log.d and toast messages
                 Log.d("MapAppAndrewZhang","Location changed on NETWORK, dropping marker & enabling network updates");
                 //drop a marker with dropMarker method
+                LatestProvider = LocationManager.NETWORK_PROVIDER;
                 dropMarker(LocationManager.NETWORK_PROVIDER);
                 //relaunch request for network location updates
                 checkPermission();

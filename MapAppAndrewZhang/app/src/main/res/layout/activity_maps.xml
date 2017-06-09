@@ -2,8 +2,8 @@
     android:layout_width="wrap_content"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    xmlns:xlmns="http://schemas.android.com/tools">
+    xmlns:xlmns="http://schemas.android.com/tools"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -32,14 +32,34 @@
     android:id="@+id/map"
     android:name="com.google.android.gms.maps.SupportMapFragment"
     android:layout_width="383dp"
-    android:layout_height="430dp"
+    android:layout_height="355dp"
     tools:context="com.example.zhanga2329.mapappandrewzhang.MapsActivity" />
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
-        android:text="CURRENT LOCATION"
+        android:text="TOGGLE TRACKING"
         android:id="@+id/button"
         android:onClick="getLocation" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal">
+
+        <EditText
+            android:layout_width="205dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/editText_search" />
+
+        <Button
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="SEARCH"
+            android:id="@+id/button4"
+            android:layout_gravity="right"
+            android:onClick="searchPOIS" />
+    </LinearLayout>
 
 </LinearLayout>
