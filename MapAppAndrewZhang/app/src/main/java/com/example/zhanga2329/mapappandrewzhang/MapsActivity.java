@@ -29,6 +29,7 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.IOException;
 import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -141,7 +142,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
         }
         else {
-            Log.d("MapAppAndrewZhang", "NOW YOU FUCKED UP. NOW YOU FUCKED UP. NOW YOU FUCKED UP. YOU HAVE FUCKED UP NOW.");
+            Log.d("MapAppAndrewZhang", "Very bad");
             Toast.makeText(this, "Not good.", Toast.LENGTH_SHORT).show();
         }
     }
@@ -151,32 +152,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         String location = search.getText().toString();
         Geocoder geocoder = new Geocoder(this);
         List<Address> addressList = null;
-        try {
-            if(location != null || !location.equals("")) {
-                addressList = geocoder.getFromLocationName(location, Integer.MAX_VALUE);
-                Log.d("MapAppAndrewZhang", "Got address list, length: " + addressList.size() + " " + geocoder.getFromLocationName(location, Integer.MAX_VALUE).size());
-                CameraUpdate update;
-                Address address;
-                if(addressList != null) {
-                    for(int i = 0; i < addressList.size(); i++) {
-                        address = addressList.get(i);
-                        LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
-                        checkPermission();
-                        if(Math.sqrt((latLng.latitude - locationManager.getLastKnownLocation(LatestProvider).getLatitude()) * (latLng.latitude - locationManager.getLastKnownLocation(LatestProvider).getLatitude())
-                               + (latLng.longitude - locationManager.getLastKnownLocation(LatestProvider).getLongitude()) * (latLng.longitude - locationManager.getLastKnownLocation(LatestProvider).getLongitude()))
-                                < 0.07) {
-                                //(Math.abs(latLng.latitude - locationManager.getLastKnownLocation(LatestProvider).getLatitude()) < 0.07
-                                //&& Math.abs(latLng.longitude - locationManager.getLastKnownLocation(LatestProvider).getLongitude()) < 0.07) {
-                            mMap.addMarker(new MarkerOptions().position(latLng).title("Search Results"));
-                            update = CameraUpdateFactory.newLatLngZoom(latLng, MY_LOC_ZOOM_FACTOR);
-                            mMap.animateCamera(update);
-                        }
-                    }
+        if (location != null || !location.equals("")) {
+            try {
+                checkPermission();
+                addressList = geocoder.getFromLocationName(location, Integer.MAX_VALUE, locationManager.getLastKnownLocation(LatestProvider).getLatitude() - 0.07,
+                        locationManager.getLastKnownLocation(LatestProvider).getLongitude() - 0.07,
+                        locationManager.getLastKnownLocation(LatestProvider).getLatitude() + 0.07,
+                        locationManager.getLastKnownLocation(LatestProvider).getLongitude() + 0.07);
+            }
+            catch(IOException e){
+                e.printStackTrace();
+            }
+
+            Log.d("MapAppAndrewZhang", "Got address list, length: " + addressList.size());
+            CameraUpdate update;
+            Address address;
+            if (addressList != null) {
+                for (int i = 0; i < addressList.size(); i++) {
+                    address = addressList.get(i);
+                    LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+                    checkPermission();
+                    //if(Math.sqrt((latLng.latitude - locationManager.getLastKnownLocation(LatestProvider).getLatitude()) * (latLng.latitude - locationManager.getLastKnownLocation(LatestProvider).getLatitude())
+                    //       + (latLng.longitude - locationManager.getLastKnownLocation(LatestProvider).getLongitude()) * (latLng.longitude - locationManager.getLastKnownLocation(LatestProvider).getLongitude()))
+                    //        < 0.07) {
+                    //(Math.abs(latLng.latitude - locationManager.getLastKnownLocation(LatestProvider).getLatitude()) < 0.07
+                    //&& Math.abs(latLng.longitude - locationManager.getLastKnownLocation(LatestProvider).getLongitude()) < 0.07) {
+                    mMap.addMarker(new MarkerOptions().position(latLng).title("Search Results"));
+                    update = CameraUpdateFactory.newLatLngZoom(latLng, MY_LOC_ZOOM_FACTOR);
+                    mMap.animateCamera(update);
                 }
             }
-        }
-        catch(Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -194,17 +199,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
                 isGPSenabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
                 if (isGPSenabled) Log.d("MapAppAndrewZhang", "getLocation: GPS is enabled");
-
                 isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
                 if (isNetworkEnabled) Log.d("MapAppAndrewZhang", "getLocation: Network is enabled");
 
                 if (!isGPSenabled && !isNetworkEnabled) {
                     Log.d("MapAppAndrewZhang", "getLocation: No Provider is Enabled");
+                    toastMessage("No Provider is Enabled - getLocation");
                 } else {
                     checkPermission();
                     if (isGPSenabled) {
                         Log.d("MapAppAndrewZhang", "getLocation: GPS ENABLED; REQUESTION LOCATION UPDATES");
-
                         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                                 MIN_TIME_BW_UPDATES,
                                 MIN_DISTANCE_CHANGE_FOR_UPDATES,
@@ -229,6 +233,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.d("MapAppAndrewZhang","GIVE UP THERE IS NO GOD IT IS USELESS");
             e.printStackTrace();
         }
+    }
+    public void toastMessage(String message) {
+        Toast.makeText(this,message,Toast.LENGTH_SHORT).show();
     }
     public void checkPermission() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -257,6 +264,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //output Log.d and toast messages
             if(trackingEnabled) {
                 Log.d("MapAppAndrewZhang","Location changed on GPS, dropping marker & disabling network updates");
+                toastMessage("Location changed on GPS, dropping marker & disabling network updates");
                 //drop a marker with dropMarker method
                 LatestProvider = LocationManager.GPS_PROVIDER;
                 dropMarker(LocationManager.GPS_PROVIDER);
@@ -264,36 +272,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 checkPermission();
                 locationManager.removeUpdates(locationListenerNetwork);
             }
-
         }
 
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
-            //setup a switch statement on status
-            //case: LocationProvider.AVAILABLE into output Log.d + Toast messages
-            //case: LocationProvider.OUT_OF_SERVICE into request updates from NETWORK_PROVIDER
-            //case: LocationProvider.TEMPORARILY_UNAVAILABLE into request updates from NETWORK_PROVIDER
-            //case: default into request updates from N E T W O R K _ P R O V I D E R
+            toastMessage("GPS status change");
             switch(status) {
-                case LocationProvider.AVAILABLE:
-                    Log.d("MapAppAndrewZhang","GPS provider is available");
+                case LocationProvider.AVAILABLE: Log.d("MapAppAndrewZhang","GPS provider is available");
+                    toastMessage("GPS available");
                     break;
-                case LocationProvider.OUT_OF_SERVICE:
-                    checkPermission();
+
+                case LocationProvider.TEMPORARILY_UNAVAILABLE: checkPermission();
+                    toastMessage("Switching to network, GPS temp unavailable");
+                    isNetworkEnabled = true;
                     locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
                             MIN_TIME_BW_UPDATES,
                             MIN_DISTANCE_CHANGE_FOR_UPDATES,
                             locationListenerNetwork);
                     break;
-                case LocationProvider.TEMPORARILY_UNAVAILABLE:
-                    checkPermission();
+
+                case LocationProvider.OUT_OF_SERVICE: checkPermission();
+                    toastMessage("Switching to network, GPS out of service");
+                    isNetworkEnabled = true;
                     locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
                             MIN_TIME_BW_UPDATES,
                             MIN_DISTANCE_CHANGE_FOR_UPDATES,
                             locationListenerNetwork);
                     break;
-                default:
-                    checkPermission();
+
+                default: checkPermission();
+                    toastMessage("Switching to network, GPS default???");
+                    isNetworkEnabled = true;
                     locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
                             MIN_TIME_BW_UPDATES,
                             MIN_DISTANCE_CHANGE_FOR_UPDATES,
@@ -304,12 +313,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         @Override
         public void onProviderEnabled(String provider) {
-
+            toastMessage("GPS reenabled, requesting updates");
+            checkPermission();
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                    MIN_TIME_BW_UPDATES,
+                    MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                    locationListenerGPS);
         }
 
         @Override
         public void onProviderDisabled(String provider) {
-
+            checkPermission();
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                    MIN_TIME_BW_UPDATES,
+                    MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                    locationListenerNetwork);
+            toastMessage("Switching to network, GPS out of service");
         }
     };
 
@@ -320,11 +339,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if(trackingEnabled) {
                 //output Log.d and toast messages
                 Log.d("MapAppAndrewZhang","Location changed on NETWORK, dropping marker & enabling network updates");
+                toastMessage("Location changed on NETWORK, dropping marker & enabling network updates");
                 //drop a marker with dropMarker method
                 LatestProvider = LocationManager.NETWORK_PROVIDER;
                 dropMarker(LocationManager.NETWORK_PROVIDER);
                 //relaunch request for network location updates
                 checkPermission();
+                locationManager.removeUpdates(locationListenerNetwork);
                 locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
                         MIN_TIME_BW_UPDATES,
                         MIN_DISTANCE_CHANGE_FOR_UPDATES,
@@ -336,6 +357,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void onStatusChanged(String provider, int status, Bundle extras) {
             //output Log.d and toast messages
             Log.d("MapAppAndrewZhang","Status changed in network");
+            toastMessage("Status changed in network");
         }
 
         @Override
